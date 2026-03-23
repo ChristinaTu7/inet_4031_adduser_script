@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 
 # INET4031
-# Your Name
-# Data Created
-# Date Last Modified
+# Christina
+# 3/21/26
+# 3/22/26
 
-#REPLACE THIS COMMENT - identify what each of these imports is for.
+#os is used to run linux system commands from the python script
+#re is used to check whether a line starts with # so it can be skipped
+#sys is used to read input line by line from the input file
+
 import os
 import re
 import sys
@@ -14,58 +17,56 @@ import sys
 #PLEASE REPLACE INSTRUCTOR "PROMPTS" WITH COMMENTS OF YOUR OWN
 
 def main():
+    #reads each line from input (create-users.input)
     for line in sys.stdin:
 
-        #REPLACE THIS COMMENT - this "regular expression" is searching for the presence of a character - what is it and why?
-        #The important part is WHY it is looking for a particular characer - what is that character being used for?
+        #checks if the line start with #, means it's commented out and should be skipped
         match = re.match("^#",line)
 
-        #REPLACE THIS COMMENT - why is the code doing this?
+        #removes extra whitespace and split the line into fields using colons, each line should contain username, password, last name, first name, and groups
         fields = line.strip().split(':')
 
-        #REPLACE THESE COMMENTS with a single comment describing the logic of the IF 
-        #what would an appropriate comment be for describing what this IF statement is checking for?
-        #what happens if the IF statement evaluates to true?
-        #how does this IF statement rely on what happened in the prior two lines of code? The match and fields lines.
-        #the code clearly shows that the variables match and the length of fields is being checked for being != 5  so why is it doing that?
+        #skips the line if it's commented out or doesn't contain the 5 fields, prevents script from processing invalid input
         if match or len(fields) != 5:
             continue
 
-        #REPLACE THIS COMMENT - what is the purpose of the next three lines. How does it relate to what is stored in the passwd file?
+        #stores the username and password from input, build the fields using first and last name so that the full name will be stored in /etc/passwd
         username = fields[0]
         password = fields[1]
         gecos = "%s %s,,," % (fields[3],fields[2])
 
-        #REPLACE THIS COMMENT - why is this split being done?
+        #split the group field by commas so it can process multiple groups for one user by the script
         groups = fields[4].split(',')
 
-        #REPLACE THIS COMMENT - what is the point of this print statement?
+        #print a message showing that the script is preparing to create a user account
         print("==> Creating account for %s..." % (username))
-        #REPLACE THIS COMMENT - what is this line doing?  What will the variable "cmd" contain.
+
+        #builds the linux adduser command to create accounts without prompting for a password and sets the username
         cmd = "/usr/sbin/adduser --disabled-password --gecos '%s' %s" % (gecos,username)
 
-        #REMOVE THIS COMMENT AFTER YOU UNDERSTAND WHAT TO DO - these statements are currently "commented out" as talked about in class
-        #The first time you run the code...what should you do here?  If uncommented - what will the os.system(cmd) statemetn attempt to do?
-        #print(cmd)
-        #os.system(cmd)
+        #during a dry run, print the command that would be executed
+        print(cmd)
+        os.system(cmd)
 
-        #REPLACE THIS COMMENT - what is the point of this print statement?
+        #print a message shwoing that the password is about to be set
         print("==> Setting the password for %s..." % (username))
-        #REPLACE THIS COMMENT - what is this line doing?  What will the variable "cmd" contain. You'll need to lookup what these linux commands do.
+
+        #build the command that sends the password into passwd so the user's password can be set
         cmd = "/bin/echo -ne '%s\n%s' | /usr/bin/sudo /usr/bin/passwd %s" % (password,password,username)
 
-        #REMOVE THIS COMMENT AFTER YOU UNDERSTAND WHAT TO DO - these statements are currently "commented out" as talked about in class
-        #The first time you run the code...what should you do here?  If uncommented - what will the os.system(cmd) statemetn attempt to do?
-        #print(cmd)
-        #os.system(cmd)
+        #during a dry run, print out the command that will be executed
+        print(cmd)
+        os.system(cmd)
 
+        #go through each group listed for the user
         for group in groups:
-            #REPLACE THIS COMMENT with one that answers "What is this IF statement looking for and why? If group !='-' what happens?"
+
+            #the dash means the user shouldn't be added to any extra groups, if the value is not a dash, add the user to that group
             if group != '-':
                 print("==> Assigning %s to the %s group..." % (username,group))
                 cmd = "/usr/sbin/adduser %s %s" % (username,group)
-                #print(cmd)
-                #os.system(cmd)
+                print(cmd)
+                os.system(cmd)
 
 if __name__ == '__main__':
     main()
